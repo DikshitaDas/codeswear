@@ -12,8 +12,7 @@ import { MdAccountCircle } from "react-icons/md";
 import { FiMenu, FiX } from "react-icons/fi";
 
 const Navbar = ({
-  logout,
-  user,
+  logout, // optional
   cart,
   addToCart,
   removeFromCart,
@@ -24,17 +23,27 @@ const Navbar = ({
   const [cartOpen, setCartOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  // detect admin from JWT in localStorage
+  // detect admin + login state from JWT in localStorage
   useEffect(() => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (!token) { setIsAdmin(false); return; }
-      const payload = JSON.parse(atob(token.split('.')[1] || ''));
-      setIsAdmin(payload?.user?.role === 'admin');
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      if (!token) {
+        setIsAdmin(false);
+        setIsLoggedIn(false);
+        return;
+      }
+
+      const payload = JSON.parse(atob(token.split(".")[1] || ""));
+      setIsAdmin(payload?.user?.role === "admin");
+      setIsLoggedIn(true);
     } catch {
       setIsAdmin(false);
+      setIsLoggedIn(false);
     }
   }, [router.pathname]);
 
@@ -65,9 +74,27 @@ const Navbar = ({
   }, [userDropdownOpen]);
 
   const isActive = (path) => router.pathname === path;
-  const desktopLinkBase = "relative px-3 py-2 rounded-lg transition font-medium";
+  const desktopLinkBase =
+    "relative px-3 py-2 rounded-lg transition font-medium";
   const desktopLinkClass = (path) =>
-    `${desktopLinkBase} ${isActive(path) ? "bg-gray-900 text-white shadow-sm" : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"}`;
+    `${desktopLinkBase} ${
+      isActive(path)
+        ? "bg-gray-900 text-white shadow-sm"
+        : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+    }`;
+
+  const handleLogout = () => {
+    try {
+      if (typeof logout === "function") {
+        logout();
+      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_email");
+    } catch {}
+    setUserDropdownOpen(false);
+    setIsOpen(false);
+    router.push("/");
+  };
 
   return (
     <nav className="bg-white/90 backdrop-blur shadow-md sticky top-0 z-50 border-b border-gray-100">
@@ -167,7 +194,7 @@ const Navbar = ({
             </Link>
           )}
 
-          {user && user.value && (
+          {isLoggedIn && (
             <button
               className="bg-gray-700 text-white p-2 rounded-lg hover:bg-gray-800 transition relative"
               title="View Cart"
@@ -183,7 +210,7 @@ const Navbar = ({
           )}
 
           {/* User Authentication */}
-          {user && user.value ? (
+          {isLoggedIn ? (
             <div className="relative user-dropdown">
               <button
                 className="bg-gray-700 text-white p-2 rounded-lg hover:bg-gray-800 transition flex items-center gap-2"
@@ -195,7 +222,6 @@ const Navbar = ({
 
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-
                   {isAdmin && (
                     <Link
                       href="/admin"
@@ -217,16 +243,7 @@ const Navbar = ({
                     My Orders
                   </Link>
                   <button
-                    onClick={() => {
-                      try {
-                        // Use centralized logout to clear auth and cart
-                        if (typeof logout === 'function') logout(user.value);
-                        // Also clear stored helper keys
-                        localStorage.removeItem("user_email");
-                      } catch {}
-                      setUserDropdownOpen(false);
-                      router.push("/");
-                    }}
+                    onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Logout
@@ -265,7 +282,11 @@ const Navbar = ({
                 <Link
                   href="/"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Home
                 </Link>
@@ -274,7 +295,11 @@ const Navbar = ({
                 <Link
                   href="/tshirt"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/tshirt") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/tshirt")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Tshirts
                 </Link>
@@ -283,7 +308,11 @@ const Navbar = ({
                 <Link
                   href="/hoodies"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/hoodies") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/hoodies")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Hoodies
                 </Link>
@@ -292,7 +321,11 @@ const Navbar = ({
                 <Link
                   href="/mugs"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/mugs") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/mugs")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Mugs
                 </Link>
@@ -301,7 +334,11 @@ const Navbar = ({
                 <Link
                   href="/stickers"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/stickers") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/stickers")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Stickers
                 </Link>
@@ -310,7 +347,11 @@ const Navbar = ({
                 <Link
                   href="/about"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/about") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/about")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   About Us
                 </Link>
@@ -319,7 +360,11 @@ const Navbar = ({
                 <Link
                   href="/contact"
                   onClick={() => setIsOpen(false)}
-                  className={`block py-2 px-3 rounded-lg transition ${isActive("/contact") ? "bg-gray-900 text-white" : "hover:bg-gray-50 hover:text-gray-900"}`}
+                  className={`block py-2 px-3 rounded-lg transition ${
+                    isActive("/contact")
+                      ? "bg-gray-900 text-white"
+                      : "hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   Contact
                 </Link>
@@ -329,11 +374,15 @@ const Navbar = ({
             {/* User Actions */}
             <div className="border-t border-gray-200 pt-4">
               {isAdmin && (
-                <Link href="/admin" className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white py-3 px-4 rounded-lg hover:bg-gray-900 transition mb-3">
+                <Link
+                  href="/admin"
+                  className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white py-3 px-4 rounded-lg hover:bg-gray-900 transition mb-3"
+                >
                   <span>🛡️</span>
                   <span>Admin</span>
                 </Link>
               )}
+
               {/* Cart Button */}
               <button
                 className="w-full flex items-center justify-center gap-2 bg-gray-700 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition mb-3"
@@ -352,7 +401,7 @@ const Navbar = ({
               </button>
 
               {/* User Authentication */}
-              {user && user.value ? (
+              {isLoggedIn ? (
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Link href="/profile" className="flex-1">
@@ -373,12 +422,7 @@ const Navbar = ({
                     </Link>
                   </div>
                   <button
-                    onClick={() => {
-                      if (typeof logout === 'function') logout(user.value);
-                      localStorage.removeItem("user_email");
-                      setIsOpen(false);
-                      router.push("/");
-                    }}
+                    onClick={handleLogout}
                     className="w-full bg-red-100 text-red-700 py-2 px-4 rounded-lg hover:bg-red-200 transition text-sm"
                   >
                     Logout
@@ -400,7 +444,7 @@ const Navbar = ({
         </div>
       )}
 
-      {/* Sidebar Cart (unchanged) */}
+      {/* Sidebar Cart */}
       {cartOpen && (
         <div className="fixed inset-0 flex justify-end z-[999]">
           {/* Backdrop */}
@@ -420,11 +464,15 @@ const Navbar = ({
 
             <div className="p-6 flex flex-col h-full">
               <h2 className="font-bold text-2xl mb-1">Shopping Cart</h2>
-              <p className="text-sm text-gray-500 mb-4">Review items in your bag</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Review items in your bag
+              </p>
 
               <ul className="space-y-3 flex-1 overflow-auto pr-1">
                 {Object.keys(cart).length === 0 && (
-                  <div className="text-center text-gray-500">Your cart is empty</div>
+                  <div className="text-center text-gray-500">
+                    Your cart is empty
+                  </div>
                 )}
 
                 {Object.keys(cart).map((item) => (
@@ -433,8 +481,12 @@ const Navbar = ({
                     className="flex items-center justify-between gap-3 border-b border-gray-100 pb-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-gray-900 truncate">{cart[item].name}</div>
-                      <div className="text-xs text-gray-500">{cart[item].variant} • {cart[item].size}</div>
+                      <div className="font-medium text-gray-900 truncate">
+                        {cart[item].name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {cart[item].variant} • {cart[item].size}
+                      </div>
                     </div>
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-2">
@@ -461,10 +513,12 @@ const Navbar = ({
                             cart[item].size,
                             cart[item].variant
                           )
-                        } // increase by 1
+                        }
                         className="cursor-pointer text-lg text-black bg-white rounded-full p-[2px] hover:bg-black hover:text-white transition"
                       />
-                      <div className="ml-3 text-right min-w-[64px] font-semibold text-gray-900">₹{cart[item].price * cart[item].qty}</div>
+                      <div className="ml-3 text-right min-w-[64px] font-semibold text-gray-900">
+                        ₹{cart[item].price * cart[item].qty}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -473,7 +527,9 @@ const Navbar = ({
               <div className="pt-4 border-t border-gray-200 mt-2">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-600">Subtotal</span>
-                  <span className="text-lg font-bold text-gray-900">₹{subTotal}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    ₹{subTotal}
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <button
