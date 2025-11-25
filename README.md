@@ -1,6 +1,4 @@
-
-
-# 🌟 **Codeswear — Modern Full-Stack E-Commerce Store**
+# 🛍️ **Codeswear — Modern Full-Stack E-Commerce Store**
 
 <div align="center">
 
